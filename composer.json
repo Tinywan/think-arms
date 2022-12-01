@@ -1,0 +1,31 @@
+{
+  "name": "tinywan/think-arms",
+  "description": "ThinkPHP 6.0 arms plugin",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4",
+    "openzipkin/zipkin": "^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "tinywan\\": "src"
+    }
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.4",
+    "friendsofphp/php-cs-fixer": "^3.6",
+    "topthink/framework": "^6.0"
+  },
+  "scripts": {
+    "cs-fix": "./vendor/bin/php-cs-fixer fix",
+    "php-stan": "./vendor/bin/phpstan analyse src"
+  },
+  "extra": {
+    "think": {
+      "services": [
+        "tinywan\\service\\ArmsService"
+      ]
+    }
+  }
+}
