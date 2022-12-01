@@ -44,7 +44,7 @@ class ArmsMiddleware
         });
         $response = $next($request);
         $response->header(['trace_id' => $traceId]);
-        $zipKin->endRootSpan(['http.status_code' => $response->getCode()]);
+        $zipKin->endRootSpan(['http.status_code' => (string) $response->getCode()]);
         return $response;
     }
 }

@@ -21,19 +21,4 @@ class ArmsService extends Service
     {
         $this->commands(['tinywan:arms' => \tinywan\command\Publish::class]);
     }
-
-    /**
-     * Merge the given configuration with the existing configuration.
-     *
-     * @param string $path
-     * @param string $key
-     *
-     * @return void
-     */
-    protected function mergeConfigFrom(string $path, string $key)
-    {
-        $config = $this->app->config->get($key, []);
-
-        $this->app->config->set(array_merge(require $path, $config), $key);
-    }
 }

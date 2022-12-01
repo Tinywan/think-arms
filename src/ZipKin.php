@@ -13,7 +13,6 @@ use Zipkin\DefaultTracing;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\Map;
 use Zipkin\Samplers\BinarySampler;
-use Zipkin\Tracing;
 use Zipkin\TracingBuilder;
 
 class ZipKin
@@ -39,7 +38,7 @@ class ZipKin
     {
     }
 
-    public function __clone(): void
+    public function __clone()
     {
         // TODO: Implement __clone() method.
     }
@@ -62,9 +61,9 @@ class ZipKin
             $tracing = self::createTracing(self::$appName, $_SERVER['REMOTE_ADDR'], $httpReporterURL);
             self::$tracing = $tracing;
 
-            $carrier = array_map(function ($header) {
-                return $header[0];
-            }, request()->header());
+            $carrier = array_map(function ($param) {
+                return $param[0] ?? 'default';
+            }, request()->all());
 
             $extractor = $tracing->getPropagation()->getExtractor(new Map());
             $extractedContext = $extractor($carrier);
@@ -162,10 +161,9 @@ class ZipKin
 
     /**
      * @desc: 获取链路的唯一标识
-     * @return mixed
      * @author Tinywan(ShaoBo Wan)
      */
-    public function getTraceId(): mixed
+    public function getTraceId()
     {
         return self::$rootSpan->getContext()->getTraceId();
     }
@@ -176,9 +174,8 @@ class ZipKin
      * @param $localServiceIPv4
      * @param $httpReporterURL
      * @param null $localServicePort
-     * @return DefaultTracing|Tracing
      */
-    public static function createTracing($localServiceName, $localServiceIPv4, $httpReporterURL, $localServicePort = null): Tracing|DefaultTracing
+    public static function createTracing($localServiceName, $localServiceIPv4, $httpReporterURL, $localServicePort = null)
     {
         $endpoint = Endpoint::create($localServiceName, $localServiceIPv4, null, $localServicePort);
         $reporter = new \Zipkin\Reporters\Http(['endpoint_url' => $httpReporterURL]);

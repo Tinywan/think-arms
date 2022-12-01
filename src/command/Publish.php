@@ -21,7 +21,7 @@ class Publish extends Command
      */
     protected function configure()
     {
-        $this->setName('tinywan:arms')->setDescription('Publish arms ');
+        $this->setName('tinywan:arms')->setDescription('Publish Arms Configure');
     }
 
     /**
@@ -33,7 +33,7 @@ class Publish extends Command
      */
     protected function execute(Input $input, Output $output): ?int
     {
-        if (!file_exists(config_path().'exception.php')) {
+        if (!file_exists(config_path().'arms.php')) {
             copy(__DIR__.'/../config/arms.php', config_path().'arms.php');
         }
         $output->writeln('<info>Succeed!</info>');
