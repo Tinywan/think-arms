@@ -32,7 +32,7 @@ class ArmsMiddleware
         $zipKin = ZipKin::getInstance($config['endpoint_url'] ?? '', $config['app_name'] ?? 'default');
         $zipKin->startRootSpan($request->controller(), $request->method(), $request->param());
         $traceId = $zipKin->getTraceId();
-        Db::listen(function ($sql, $runtime) use ($zipKin) {
+        Db::listen(function ($sql) use ($zipKin) {
             $type = 'mysql-select';
             if (str_contains($sql, 'INSERT')) {
                 $type = 'mysql-insert';
