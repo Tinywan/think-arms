@@ -88,9 +88,9 @@ class ZipKin
         self::$rootSpan->start();
         self::$rootSpan->tag('http.method', $method);
         self::$rootSpan->tag('params', json_encode($params));
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? 'default';
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? 'cmd';
         self::$rootSpan->tag('site', $origin);
-        $host = $_SERVER['HTTP_HOST'] ?? 'default';
+        $host = $_SERVER['HTTP_HOST'] ?? 'cmd';
         self::$rootSpan->tag('host', $host);
     }
 
@@ -116,10 +116,10 @@ class ZipKin
     /**
      * @desc: 新增一个子span
      * @param $executeStr
-     * @param $type
+     * @param string $type
      * @author Tinywan(ShaoBo Wan)
      */
-    public function addChildSpan($executeStr, $type = 'mysql-select')
+    public function addChildSpan($executeStr, string $type = 'mysql-select')
     {
         if (self::$span===null) {
             self::$span = self::$rootSpan;
