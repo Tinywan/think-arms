@@ -1,6 +1,6 @@
-## think-arms
+## ThinkPHP6.0-ARMS
 
-Think ARMS 阿里云应用监控链路追踪组件
+ARMS 阿里云应用监控链路追踪 library for ThinkPHP6.0 plugin library
 
 ## 安装
 
