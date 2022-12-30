@@ -13,6 +13,7 @@ use Zipkin\DefaultTracing;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\Map;
 use Zipkin\Samplers\BinarySampler;
+use Zipkin\Tracing;
 use Zipkin\TracingBuilder;
 
 class ZipKin
@@ -63,7 +64,7 @@ class ZipKin
 
             $carrier = array_map(function ($param) {
                 return $param[0] ?? 'default';
-            }, request()->all());
+            }, request()->param());
 
             $extractor = $tracing->getPropagation()->getExtractor(new Map());
             $extractedContext = $extractor($carrier);
@@ -174,6 +175,7 @@ class ZipKin
      * @param $localServiceIPv4
      * @param $httpReporterURL
      * @param null $localServicePort
+     * @return DefaultTracing|Tracing
      */
     public static function createTracing($localServiceName, $localServiceIPv4, $httpReporterURL, $localServicePort = null)
     {
