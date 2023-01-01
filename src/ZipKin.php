@@ -13,16 +13,17 @@ use Zipkin\DefaultTracing;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\Map;
 use Zipkin\Samplers\BinarySampler;
-use Zipkin\Tracing;
+use Zipkin\Span;
+use Zipkin\Tracer;
 use Zipkin\TracingBuilder;
 
 class ZipKin
 {
-    private static $tracer;
+    protected static Tracer $tracer;
 
-    private static $rootSpan;
+    protected static Span $rootSpan;
 
-    private static string $appName = '';
+    protected static string $appName = '';
 
     private static ?ZipKin $instance = null;
 
@@ -116,18 +117,19 @@ class ZipKin
 
     /**
      * @desc: 新增一个子span
-     * @param $executeStr
-     * @param string $type
+     * @param string $executeStr
+     * @param $type
+     * @param int|null $time
      * @author Tinywan(ShaoBo Wan)
      */
-    public function addChildSpan($executeStr, string $type = 'mysql-select')
+    public function addChildSpan(string $executeStr, $type, int $time = null)
     {
         if (self::$span===null) {
             self::$span = self::$rootSpan;
         }
         $childSpan = self::$tracer->newChild(self::$span->getContext());
 
-        $childSpan->start();
+        $childSpan->start($time);
         if (is_array($type)) {
             foreach ($type as $key => $val) {
                 $childSpan->tag($key, $val);
@@ -135,7 +137,7 @@ class ZipKin
             $childSpan->setName($executeStr);
         } else {
             $tag = 'data';
-            if (in_array($type, ['mysql-select','mysql-execute'])) {
+            if (in_array($type, ['sql.query','sql.exe'])) {
                 $tag = 'db.statement';
             }
             $childSpan->tag($tag, $executeStr);
@@ -164,7 +166,7 @@ class ZipKin
      * @desc: 获取链路的唯一标识
      * @author Tinywan(ShaoBo Wan)
      */
-    public function getTraceId()
+    public function getTraceId(): string
     {
         return self::$rootSpan->getContext()->getTraceId();
     }
@@ -204,7 +206,7 @@ class ZipKin
      * @return null
      * @author Tinywan(ShaoBo Wan)
      */
-    public function getChildSpan()
+    public function getChildSpan(): ?Span
     {
         if (empty(self::$childSpan)) {
             self::$childSpan = self::$rootSpan;

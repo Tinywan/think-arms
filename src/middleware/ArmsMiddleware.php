@@ -32,15 +32,17 @@ class ArmsMiddleware
         $zipKin = ZipKin::getInstance($config['endpoint_url'] ?? '', $config['app_name'] ?? 'default');
         $zipKin->startRootSpan($request->controller(), $request->method(), $request->param());
         $traceId = $zipKin->getTraceId();
-        Db::listen(function ($sql) use ($zipKin) {
-            $type = 'mysql-select';
-            if (str_contains($sql, 'INSERT')) {
-                $type = 'mysql-insert';
-            } elseif (str_contains($sql, 'UPDATE')) {
-                $type = 'mysql-update';
+        Db::listen(function ($sql, $time) use ($zipKin) {
+            if (0 !== strpos($sql, 'CONNECT:')) {
+                $type = 'sql.query';
+                if (str_contains($sql, 'INSERT')) {
+                    $type = 'sql.inert';
+                } elseif (str_contains($sql, 'UPDATE')) {
+                    $type = 'sql.update';
+                }
+                $zipKin->addChildSpan($sql, $type, (int) ((microtime(true) - $time) * 1000 * 1000));
+                $zipKin->finishChildSpan();
             }
-            $zipKin->addChildSpan($sql, $type);
-            $zipKin->finishChildSpan();
         });
         $response = $next($request);
         $response->header(['trace_id' => $traceId]);
