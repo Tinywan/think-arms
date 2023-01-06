@@ -1,9 +1,11 @@
 <?php
+
 /**
  * @desc ZipKin.php 描述信息
  * @author Tinywan(ShaoBo Wan)
  * @date 2022/12/1 19:35
  */
+
 declare(strict_types=1);
 
 namespace tinywan;
@@ -15,6 +17,7 @@ use Zipkin\Propagation\Map;
 use Zipkin\Samplers\BinarySampler;
 use Zipkin\Span;
 use Zipkin\Tracer;
+use Zipkin\Tracing;
 use Zipkin\TracingBuilder;
 
 class ZipKin
@@ -36,11 +39,11 @@ class ZipKin
 
     private static $childSpan = null;
 
-    public function __construct()
+    private function __construct()
     {
     }
 
-    public function __clone()
+    private function __clone()
     {
         // TODO: Implement __clone() method.
     }
@@ -55,24 +58,21 @@ class ZipKin
      */
     public static function getInstance(string $httpReporterURL = '', string $appName = 'default'): ?ZipKin
     {
-        if (self::$tracer === null) {
-            if (empty($httpReporterURL)) {
-                throw new ZipKinException('链路错误');
-            }
-            self::$appName = $appName ;
-            $tracing = self::createTracing(self::$appName, $_SERVER['REMOTE_ADDR'], $httpReporterURL);
-            self::$tracing = $tracing;
-
-            $carrier = array_map(function ($param) {
-                return $param[0] ?? 'default';
-            }, request()->param());
-
-            $extractor = $tracing->getPropagation()->getExtractor(new Map());
-            $extractedContext = $extractor($carrier);
-
-            self::$tracer = $tracing->getTracer();
-            self::$rootSpan = self::$tracer->nextSpan($extractedContext);
+        if (empty($httpReporterURL)) {
+            throw new ZipKinException('链路错误');
+        }
+        if (!(self::$instance instanceof self)) {
             self::$instance = new self();
+
+            self::$appName = $appName;
+            self::$tracing = self::createTracing(self::$appName, $_SERVER['REMOTE_ADDR'], $httpReporterURL);
+            $extractor = self::$tracing->getPropagation()->getExtractor(new Map());
+            $extractedContext = $extractor(array_map(function ($param) {
+                return $param[0] ?? 'default';
+            }, request()->param()));
+
+            self::$tracer = self::$tracing->getTracer();
+            self::$rootSpan = self::$tracer->nextSpan($extractedContext);
         }
         return self::$instance;
     }
@@ -124,7 +124,7 @@ class ZipKin
      */
     public function addChildSpan(string $executeStr, $type, int $time = null)
     {
-        if (self::$span===null) {
+        if (self::$span === null) {
             self::$span = self::$rootSpan;
         }
         $childSpan = self::$tracer->newChild(self::$span->getContext());
@@ -137,7 +137,7 @@ class ZipKin
             $childSpan->setName($executeStr);
         } else {
             $tag = 'data';
-            if (in_array($type, ['sql.query','sql.exe'])) {
+            if (in_array($type, ['sql.query', 'sql.exe'])) {
                 $tag = 'db.statement';
             }
             $childSpan->tag($tag, $executeStr);
