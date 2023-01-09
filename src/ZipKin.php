@@ -117,12 +117,12 @@ class ZipKin
 
     /**
      * @desc: 新增一个子span
-     * @param string $executeStr
-     * @param $type
+     * @param string $childName
+     * @param $executeValue
      * @param int|null $time
      * @author Tinywan(ShaoBo Wan)
      */
-    public function addChildSpan(string $executeStr, $type, int $time = null)
+    public function addChildSpan(string $childName, $executeValue, int $time = null)
     {
         if (self::$span === null) {
             self::$span = self::$rootSpan;
@@ -130,20 +130,18 @@ class ZipKin
         $childSpan = self::$tracer->newChild(self::$span->getContext());
 
         $childSpan->start($time);
-        if (is_array($type)) {
-            foreach ($type as $key => $val) {
+        $childSpan->setName($childName);
+        if (is_array($executeValue)) {
+            foreach ($executeValue as $key => $val) {
                 $childSpan->tag($key, $val);
             }
-            $childSpan->setName($executeStr);
         } else {
             $tag = 'data';
-            if (in_array($type, ['sql.query', 'sql.exe'])) {
+            if (in_array($childName, ['sql.query', 'sql.exe'])) {
                 $tag = 'db.statement';
             }
-            $childSpan->tag($tag, $executeStr);
-            $childSpan->setName($type);
+            $childSpan->tag($tag, $executeValue);
         }
-
         self::$childSpan = $childSpan;
     }
 

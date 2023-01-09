@@ -31,21 +31,22 @@ class ArmsMiddleware
         $config = Config::get('arms', []);
         $zipKin = ZipKin::getInstance($config['endpoint_url'] ?? '', $config['app_name'] ?? 'default');
         $zipKin->startRootSpan($request->controller(), $request->method(), $request->param());
-        $traceId = $zipKin->getTraceId();
+        $request->zipKin = $zipKin;
+        $request->traceId = $zipKin->getTraceId();
         Db::listen(function ($sql, $time) use ($zipKin) {
             if (0 !== strpos($sql, 'CONNECT:')) {
-                $type = 'sql.query';
+                $childName = 'sql.query';
                 if (str_contains($sql, 'INSERT')) {
-                    $type = 'sql.inert';
+                    $childName = 'sql.inert';
                 } elseif (str_contains($sql, 'UPDATE')) {
-                    $type = 'sql.update';
+                    $childName = 'sql.update';
                 }
-                $zipKin->addChildSpan($sql, $type, (int) ((microtime(true) - $time) * 1000 * 1000));
+                $zipKin->addChildSpan($childName, $sql, (int) ((microtime(true) - $time) * 1000 * 1000));
                 $zipKin->finishChildSpan();
             }
         });
         $response = $next($request);
-        $response->header(['x-trace-id' => $traceId]);
+        $response->header(['x-trace-id' => $request->traceId]);
         $zipKin->endRootSpan(['http.status_code' => (string) $response->getCode()]);
         return $response;
     }
