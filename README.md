@@ -19,12 +19,22 @@ php think tinywan:arms
 
 ### 配置中间件
 
-全局中间件在app目录下面middleware.php文件中定义，使用下面的方式：
+全局中间件在app目录下面`middleware.php`文件中定义，使用下面的方式：
 
 ```php
-
 return [
 	\tinywan\middleware\ArmsMiddleware::class,
+];
+```
+
+全局路由中间件`config/route.php`文件中定义，使用下面的方式：
+
+```php
+return [
+    // 路由中间件全局执行
+    'middleware'     => [
+        \tinywan\middleware\ArmsMiddleware::class
+    ]
 ];
 ```
 
