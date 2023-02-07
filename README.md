@@ -38,14 +38,15 @@ return [
 ];
 ```
 
-## 其他
+## 使用案例
 
-GuzzleHttp\Client 使用
+### [GuzzleHttp\Client](https://github.com/guzzle/guzzle)
 
-```
-$client = new Client(['base_uri' => $config['app_base_uri']]);
+```php
+$client = new \GuzzleHttp\Client($uri = 'https://api.github.com/repos/guzzle/guzzle');
 try {
-    $options = ['json' => $body];
+    $options = ['json' => []];
+    $config = [];
     $headers = [];
     if ($uri !== '/oauth/token') {
         $_accessToken = self::_issueAccessToken($config);
@@ -55,7 +56,7 @@ try {
         $headers = array_merge(['Authorization' => 'Bearer ' . $_accessToken], $header);
         $options = array_merge(['headers' => $headers], $options);
     }
-    request()->zipKin->addChildSpan('中心服务调用', [
+    request()->zipKin->addChildSpan('服务调用', [
         'uri' => $uri,
         'method' => $method,
         'headers' => json_encode($headers),
