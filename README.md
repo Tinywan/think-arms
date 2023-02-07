@@ -43,37 +43,52 @@ return [
 ### [GuzzleHttp\Client](https://github.com/guzzle/guzzle)
 
 ```php
+
+/* HTTP Request to the backend */
+
 $client = new \GuzzleHttp\Client($uri = 'https://api.github.com/repos/guzzle/guzzle');
 try {
     $options = ['json' => []];
     $config = [];
-    $headers = [];
+    $headers = $header = [];
     if ($uri !== '/oauth/token') {
         $_accessToken = self::_issueAccessToken($config);
         if (false === $_accessToken) {
             return self::setError(false, self::getMessage());
         }
         $headers = array_merge(['Authorization' => 'Bearer ' . $_accessToken], $header);
+        /* Injects the context into the wire */
+        $injector = request()->tracing->getPropagation()->getInjector(new \Zipkin\Propagation\Map());
+        $injector(request()->childSpan->getContext(), $headers);
         $options = array_merge(['headers' => $headers], $options);
     }
-    request()->zipKin->addChildSpan('服务调用', [
-        'uri' => $uri,
-        'method' => $method,
-        'headers' => json_encode($headers),
-        'body' => json_encode($body),
-    ]);
+    // 添加子节点
+    request()->childSpan->annotate('request_started', \Zipkin\Timestamp\now());
     $resp = $client->request($method, $uri, $options);
 } catch (RequestException $e) {
-    if ($e->hasResponse()) {
-        if (200 != $e->getResponse()->getStatusCode()) {
-            $jsonStr = $e->getResponse()->getBody()->getContents();
-            $content = json_decode($jsonStr, true);
-            return self::setError(false, '温馨提示：' . $content['msg'] ?? '未知的错误信息');
-        }
-    }
     return self::setError(false, '系统中心提示：' . $e->getMessage());
 }
+
+// 请求结束
+request()->childSpan->annotate('request_finished', \Zipkin\Timestamp\now());
+// 结束子节点
 request()->zipKin->finishChildSpan();
+// 或者 request()->childSpan->finish();
 
 $jsonStr = $resp->getBody()->getContents();
+```
+
+### 创培中心使用
+
+```php
+$request = new \think\Request();
+
+// 获取所有请求
+$carrier = array_map(function ($header) {
+    return $header[0];
+}, $request->headers->all());
+
+/* Extracts the context from the HTTP headers */
+$extractor = $tracing->getPropagation()->getExtractor(new \Zipkin\Propagation\Map());
+$extractedContext = $extractor($carrier);
 ```

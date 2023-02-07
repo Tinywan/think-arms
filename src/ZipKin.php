@@ -66,12 +66,12 @@ class ZipKin
 
             self::$appName = $appName;
             self::$tracing = self::createTracing(self::$appName, $_SERVER['REMOTE_ADDR'], $httpReporterURL);
+            self::$tracer = self::$tracing->getTracer();
+
             $extractor = self::$tracing->getPropagation()->getExtractor(new Map());
             $extractedContext = $extractor(array_map(function ($param) {
                 return $param[0] ?? 'default';
             }, request()->param()));
-
-            self::$tracer = self::$tracing->getTracer();
             self::$rootSpan = self::$tracer->nextSpan($extractedContext);
         }
         return self::$instance;

@@ -32,6 +32,8 @@ class ArmsMiddleware
         $zipKin = ZipKin::getInstance($config['endpoint_url'] ?? '', $config['app_name'] ?? 'default');
         $zipKin->startRootSpan($request->controller(), $request->method(), $request->param());
         $request->zipKin = $zipKin;
+        $request->tracing = $zipKin->getTracing();
+        $request->childSpan = $zipKin->getChildSpan();
         $request->traceId = $zipKin->getTraceId();
         Db::listen(function ($sql, $time) use ($zipKin) {
             if (0 !== strpos($sql, 'CONNECT:')) {
