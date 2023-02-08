@@ -66,12 +66,14 @@ class ZipKin
 
             self::$appName = $appName;
             self::$tracing = self::createTracing(self::$appName, $_SERVER['REMOTE_ADDR'], $httpReporterURL);
-            self::$tracer = self::$tracing->getTracer();
 
+            /* Extracts the context from the HTTP headers */
             $extractor = self::$tracing->getPropagation()->getExtractor(new Map());
             $extractedContext = $extractor(array_map(function ($param) {
                 return $param[0] ?? 'default';
             }, request()->param()));
+
+            self::$tracer = self::$tracing->getTracer();
             self::$rootSpan = self::$tracer->nextSpan($extractedContext);
         }
         return self::$instance;
@@ -130,6 +132,7 @@ class ZipKin
         $childSpan = self::$tracer->newChild(self::$span->getContext());
 
         $childSpan->start($time);
+        $childSpan->setKind(\Zipkin\Kind\CLIENT);
         $childSpan->setName($childName);
         if (is_array($executeValue)) {
             foreach ($executeValue as $key => $val) {
@@ -180,6 +183,7 @@ class ZipKin
     public static function createTracing($localServiceName, $localServiceIPv4, $httpReporterURL, $localServicePort = null)
     {
         $endpoint = Endpoint::create($localServiceName, $localServiceIPv4, null, $localServicePort);
+
         $reporter = new \Zipkin\Reporters\Http(['endpoint_url' => $httpReporterURL]);
         $sampler = BinarySampler::createAsAlwaysSample();
         return TracingBuilder::create()

@@ -32,6 +32,7 @@ class ArmsMiddleware
         $zipKin = ZipKin::getInstance($config['endpoint_url'] ?? '', $config['app_name'] ?? 'default');
         $zipKin->startRootSpan($request->controller(), $request->method(), $request->param());
         $request->zipKin = $zipKin;
+        $request->tracer = $zipKin->getTracing()->getTracer();
         $request->tracing = $zipKin->getTracing();
         $request->childSpan = $zipKin->getChildSpan();
         $request->traceId = $zipKin->getTraceId();
@@ -48,7 +49,7 @@ class ArmsMiddleware
             }
         });
         $response = $next($request);
-        $response->header(['x-trace-id' => $request->traceId]);
+        $response->header(['X-Trace-Id' => $request->traceId]);
         $zipKin->endRootSpan(['http.status_code' => (string) $response->getCode()]);
         return $response;
     }
