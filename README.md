@@ -4,7 +4,7 @@ ARMS 阿里云应用监控链路追踪 library for ThinkPHP6.0 plugin library
 
 ## 安装
 
-```phpregexp
+```php
 composer require tinywan/think-arms
 ```
 
@@ -12,7 +12,7 @@ composer require tinywan/think-arms
 
 ### 发布配置
 
-```phpregexp
+```php
 php think tinywan:arms
 ```
 这将自动生成 `config/arms.php` 配置文件。
@@ -95,32 +95,5 @@ public function requestHandle(string $method, string $uri, array $body = [], arr
         return self::setError(false, $data['msg'] ?? '响应数据结构异常');
     }
     return $data;
-}
-```
-
-### 创培中心使用
-
-```php
-public function handle(\think\Request $request, Closure $next): \think\Response
-{
-    $zipKin = ZipKin::getInstance(config('app.endpoint_url'),'cp-ucenter');
-    $zipKin->startAction($request->controller(),$request->method(),$request->param());
-    $traceId = $zipKin->getTraceId();
-    $request->tracer = $traceId;
-    $request->rootSpan = $traceId;
-    Db::listen(function ($sql, $runtime) use ($zipKin) {
-        $type = 'db.sql.select';
-        if (strpos($sql, 'INSERT') !== false) {
-            $type = 'db.sql.insert';
-        } elseif (strpos($sql, 'UPDATE') !== false) {
-            $type = 'db.sql.update';
-        }
-        $zipKin->addChild($sql, $type);
-        $zipKin->finishChild();
-    });
-    $response = $next($request);
-    $response->header(['X-Trace-Id' => $traceId]);
-    $zipKin->endAction(['http.status_code' => $response->getCode()]);
-    return $response;
 }
 ```
